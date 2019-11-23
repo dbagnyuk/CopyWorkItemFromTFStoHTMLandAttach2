@@ -39,7 +39,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                         continue;
                 }
 
-                // condition: if the entered symbol is a later between (a and z) or (A and Z)
+                // condition: if the entered symbol is a digit between 0 and 9
                 // and the count of entered digits less than the size of the char array
                 if ((enteredSymbol >= 48 && enteredSymbol <= 57) && digitsCount < stringSize)
                 {
@@ -47,7 +47,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                     sString[digitsCount++] = (char)enteredSymbol;
                 }
 
-                // condition: if the entered symbol is a digit between 0 and 9
+                // condition: if the entered symbol is a later between (a and z) or (A and Z)
                 // and the count of entered digits less than the size of the char array
                 if (((enteredSymbol >= 65 && enteredSymbol <= 90) || (enteredSymbol >= 97 && enteredSymbol <= 122)) && digitsCount < stringSize - 1)
                 {
@@ -81,13 +81,16 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                 else if (enteredSymbol == 13)
                 {
                     string savedNumber = new string(sString);
+                    // if digits entered we thing that is TFS id and finish
                     if (Int32.TryParse(savedNumber, out result))
                         break;
+                    // if entered 'config' we return -1 for process it next
                     if (savedNumber.ToLower().CompareTo("config") == 0)
                     {
                         result = -1;
                         break;
                     }
+                    // if entered non digits and not word 'config' we clear all and back to enter again
                     if (!Int32.TryParse(savedNumber, out result) || savedNumber.ToLower().CompareTo("config") != 0)
                     {
                         // clear the char array from digits we entered before

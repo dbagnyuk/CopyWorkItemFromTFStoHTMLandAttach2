@@ -23,7 +23,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
 
             while (true)
             {
-                // read the config file until success readed
+                // read the config file until success
                 if (Config.callReadConfig(configFile, ref config))
                     break;
             }
@@ -39,6 +39,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                     Config.callEditConfig(configFile);
                     while (true)
                     {
+                        // read the config file until success
                         if (Config.callReadConfig(configFile, ref config))
                             break;
                     }
@@ -47,17 +48,19 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                 break;
             }
 
-            // save the configuration
+            // save the configuration for operate with
+            // domain and login save from config as is
             string DomainName = config[0];
-            //string Password = config[1];
+            // decrypting password from config
             string Password = Cipher.Decrypt(config[1], Key);
-            //string pathToTasks = config[2];
+            // add the last '\' to path if it's not entered by user in config
             string pathToTasks = (config[2].EndsWith("\\") ? config[2] : config[2] + "\\");
 
-            // ask if user want to download the attachments
+            // ask if user want to download the attachments or not
             Console.Clear();
             Console.Write("Download the Attachments? (y/n): ");
             bool confirm = Input.downloadConfirm();
+            // current state of program progress
             Console.Clear();
             Console.Write("Creating the HTML file...");
 
@@ -92,14 +95,15 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
 
             // create web link for tfs id
             string tfsLink = tpc.Uri + workItem.AreaPath.Remove(workItem.AreaPath.IndexOf((char)92)) + "/_workitems/edit/";
-
+            // create path and name to html file
             string pathToHtml = pathToTasks + workItem.Type.Name + " " + workItem.Id + ".html";
+            // create path and folder name for attachments
             string pathToAttach = pathToTasks + workItem.Id;
 
             FileStream fileStream = null;
             StreamWriter streamWriter = null;
 
-            // create/open the html file
+            // create/open the html file for write in to it
             if (File.Exists(pathToHtml))
                 fileStream = new FileStream(pathToHtml, FileMode.Truncate);
             else
@@ -107,32 +111,32 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             streamWriter = new StreamWriter(fileStream);
 
             // fill in the html file
+            // head, title, encoding
             streamWriter.WriteLine("{0}", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
             streamWriter.WriteLine("{0}", "<html>");
             streamWriter.WriteLine("<head>{0}</head>", "<meta charset=\"UTF-8\">");
             streamWriter.WriteLine("<title>{0} {1}</title>", workItem.Type.Name, workItem.Id);
             streamWriter.WriteLine("{0}", "<body>");
             streamWriter.WriteLine("{0}", "");
-
+            // short info block: 'name', 'id', 'title', 'state' and 'assigned to' info of work item
             streamWriter.WriteLine(@"<p><font style=""background-color:rgb(255, 255, 255); color:rgb(0, 0, 0); font-family:Segoe UI; font-size:12px;"">"
                                    + workItem.Type.Name + " " + workItem.Id + ": " + workItem.Title
                                    + @"</font><p>");
-
             streamWriter.WriteLine(@"<p style=""border: 1px solid; color: red; width: 50%;"">"
                                    + @"<font style=""background-color:rgb(255, 255, 255); color:rgb(0, 0, 0); font-family:Segoe UI; font-size:12px;"">"
                                    + workItem.Type.Name + " is <b>" + workItem.State
                                    + (workItem.State == "Closed" ? "</b>" : "</b> and Assigned To <b>" + workItem.Fields["Assigned To"].Value + "</b>")
                                    + @"</font><p>");
-
+            // blok 'title'
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">TITLE:</div>");
             streamWriter.WriteLine("<p>{0}</p>", workItem.Title);
-
+            // block 'description'
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">DESCRIPTION:</div>");
             if (workItem.Type.Name == "Bug" || workItem.Type.Name == "Issue")
                 streamWriter.WriteLine(workItem.Fields["REPRO STEPS"].Value);
             else if (workItem.Type.Name == "Task")
                 streamWriter.WriteLine(workItem.Fields["DESCRIPTION"].Value);
-
+            // block 'history'
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">HISTORY:</div><br>");
             for (int i = workItem.Revisions.Count - 1; i >= 0; i--)
             {
@@ -149,7 +153,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                                        + workItem.Revisions[i].Fields["State Change Date"].Value
                                        + @"</font><br><br>");
             }
-
+            // block with linked work items. in table
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">ALL LINKS:</div>");
             streamWriter.WriteLine(@"<p><table style=""width:100%; font-family:Segoe UI; font-size:12px;"">");
             streamWriter.WriteLine(@"<tr><th align=""left"">Link Type</th>
@@ -169,10 +173,11 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                 streamWriter.WriteLine(@"<td>{0}</td></tr>", wiDeliverable.Fields["Assigned To"].Value);
             }
             streamWriter.WriteLine(@"</table></p>");
-
+            // block with the web link to the thin client on to work item
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">LINK:</div>");
             streamWriter.WriteLine(@"<p><a href=""{0}{1}"">{0}{1}</a><p>", tfsLink, workItem.Id);
 
+            // current state of program progress
             Console.Clear();
             Console.Write("Search folder for attach...");
             Thread.Sleep(700);
@@ -181,13 +186,15 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             DirectoryInfo hdDirectoryInWhichToSearch = new DirectoryInfo(pathToTasks);
             FileSystemInfo[] filesAndDirs = hdDirectoryInWhichToSearch.GetFileSystemInfos("*" + workItem.Id + "*");
 
+            // if folder for attach alredy exists change the the default name to it
             foreach (FileSystemInfo foundDir in filesAndDirs)
                 if (foundDir.GetType() == typeof(DirectoryInfo))
                     pathToAttach = foundDir.FullName;
 
             // if folder exists, add the link to it
-            if (Directory.Exists(pathToAttach))
+            if (Directory.Exists(pathToAttach) || confirm)
             {
+                // block with link to folder with attacments
                 streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">ATTACHMENTS:</div>");
                 streamWriter.WriteLine(@"<p><a href=""{0}"">{0}</a><p>", pathToAttach);
             }
@@ -198,6 +205,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             streamWriter.Close();
             fileStream.Close();
 
+            // current state of program progress
             Console.Clear();
             Console.Write("Saving the HTML file...");
             Thread.Sleep(700);
@@ -205,6 +213,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             // download the attachments from tfs item
             if (confirm)
             {
+                // current state of program progress
                 Console.Clear();
                 Console.Write("Download Attachments...");
 
@@ -218,16 +227,25 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                     UseDefaultCredentials = true
                 };
 
-                // Loop through each attachment in the work item.
-                foreach (Attachment attachment in workItem.Attachments)
+                // catch the error with download the attacments
+                try
                 {
-                    // Construct a filename for the attachment
-                    string filename = string.Format("{0}\\{1}", pathToAttach, attachment.Name);
-                    // Download the attachment.
-                    webClient.DownloadFile(attachment.Uri, filename);
+                    // Loop through each attachment in the work item.
+                    foreach (Attachment attachment in workItem.Attachments)
+                    {
+                        // Construct a filename for the attachment
+                        string filename = string.Format("{0}\\{1}", pathToAttach, attachment.Name);
+                        // Download the attachment.
+                        webClient.DownloadFile(attachment.Uri, filename);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    exExit(ex);
                 }
             }
 
+            // current state of program progress
             Console.Clear();
             Console.Write("Opening the HTML file...");
             Thread.Sleep(700);
@@ -235,6 +253,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             // open the created html file, will be open by default app for html files
             System.Diagnostics.Process.Start(pathToHtml);
 
+            // current state of program progress
             Console.Clear();
             Console.Write("Finish...");
             Thread.Sleep(700);

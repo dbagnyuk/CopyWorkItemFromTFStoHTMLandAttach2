@@ -11,6 +11,11 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
         /// Create/Edit/Read the Config File.
         /// </summary>
 
+        // call the reading the config file
+        public static bool callReadConfig(string configFile, ref string[] config)
+        {
+            return readConfigFile(configFile, ref config);
+        }
         // call the creating or editing the config file
         public static void callEditConfig(string conf)
         {
@@ -20,11 +25,6 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             Console.Clear();
             Config.editConfigFile(conf);
             Console.Clear();
-        }
-        // call the reading the config file
-        public static bool callReadConfig(string configFile, ref string[] config)
-        {
-            return readConfigFile(configFile, ref config);
         }
         // read the config file to memory
         private static bool readConfigFile(string configFile, ref string[] config)
@@ -37,7 +37,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                 callEditConfig(configFile);
                 return configReaded;
             }
-            // read the config file
+            // catch error of reading the config file
             try
             {
                 // read config file into string array
@@ -46,8 +46,6 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             catch (Exception ex)
             {
                 Program.exExit(ex);
-                callEditConfig(configFile);
-                return configReaded;
             }
             // chek config if it has less or more than 3 string
             if (config.Length != 3)
@@ -103,20 +101,22 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             }
 
             Console.Write("Enter new password: ");
-            //streamWriter.WriteLine(passwordInput());
+            // encrypt the password for writing into config file
             streamWriter.WriteLine(Cipher.Encrypt(passwordInput(), Program.Key));
             Console.Write("\n");
 
+            // code for cheking the old password before save new one
             //while (true)
             //{
             //    Console.Clear();
             //    Console.Write("Enter old password: ");
-            //    string old_pass = Console.ReadLine();
-            //    if (config[1].CompareTo(old_pass) == 0)
+            //    string old_pass = passwordInput();
+            //    if (Cipher.Decrypt(config[1], Program.Key).CompareTo(old_pass) == 0)
             //    {
             //        Console.Clear();
             //        Console.Write("Enter new password: ");
-            //        config[1] = Console.ReadLine();
+            //        streamWriter.WriteLine(Cipher.Encrypt(passwordInput(), Program.Key));
+            //        Console.Write("\n");
             //        break;
             //    }
             //}
@@ -233,12 +233,13 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
                     break;
                 }
                 // control inputted symbols. only letters, digits, colon, and slash
-                if (((enteredSymbol >= 48 && enteredSymbol <= 58) || (enteredSymbol >= 65 && enteredSymbol <= 90) || (enteredSymbol >= 97 && enteredSymbol <= 122) || enteredSymbol == 92) && digitsCount < stringSize - 1)
+                if (((enteredSymbol >= 48 && enteredSymbol <= 58) || (enteredSymbol >= 65 && enteredSymbol <= 90) || 
+                    (enteredSymbol >= 97 && enteredSymbol <= 122) || enteredSymbol == 92) && digitsCount < stringSize - 1)
                 {
                     Console.Write((char)enteredSymbol);
                     sString[digitsCount++] = (char)enteredSymbol;
                 }
-                // condition: if pressed Enter and we nothing entered before, we do nothing
+                // condition: if pressed Enter and we send back '#' for pasting previous value
                 if (enteredSymbol == 13 && digitsCount == 0)
                 {
                     sString[digitsCount++] = (char)35;
