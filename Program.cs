@@ -121,12 +121,12 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             // short info block: 'name', 'id', 'title', 'state' and 'assigned to' info of work item
             streamWriter.WriteLine(@"<p><font style=""background-color:rgb(255, 255, 255); color:rgb(0, 0, 0); font-family:Segoe UI; font-size:12px;"">"
                                    + workItem.Type.Name + " " + workItem.Id + ": " + workItem.Title
-                                   + @"</font><p>");
+                                   + @"</font></p>");
             streamWriter.WriteLine(@"<p style=""border: 1px solid; color: red; width: 50%;"">"
                                    + @"<font style=""background-color:rgb(255, 255, 255); color:rgb(0, 0, 0); font-family:Segoe UI; font-size:12px;"">"
                                    + workItem.Type.Name + " is <b>" + workItem.State
                                    + (workItem.State == "Closed" ? "</b>" : "</b> and Assigned To <b>" + workItem.Fields["Assigned To"].Value + "</b>")
-                                   + @"</font><p>");
+                                   + @"</font></p>");
             // blok 'title'
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">TITLE:</div>");
             streamWriter.WriteLine("<p>{0}</p>", workItem.Title);
@@ -175,7 +175,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             streamWriter.WriteLine(@"</table></p>");
             // block with the web link to the thin client on to work item
             streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">LINK:</div>");
-            streamWriter.WriteLine(@"<p><a href=""{0}{1}"">{0}{1}</a><p>", tfsLink, workItem.Id);
+            streamWriter.WriteLine(@"<p><a href=""{0}{1}"">{0}{1}</a></p>", tfsLink, workItem.Id);
 
             // current state of program progress
             Console.Clear();
@@ -196,7 +196,7 @@ namespace CopyWorkItemFromTFStoHTMLandAttach2
             {
                 // block with link to folder with attacments
                 streamWriter.WriteLine(@"<div style=""border: 1px solid black; background-color:lightgray;"">ATTACHMENTS:</div>");
-                streamWriter.WriteLine(@"<p><a href=""{0}"">{0}</a><p>", pathToAttach);
+                streamWriter.WriteLine(@"<p><a href=""{0}"">{0}</a></p>", pathToAttach);
             }
 
             streamWriter.WriteLine("{0}", "</body>");
